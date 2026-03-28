@@ -1,0 +1,83 @@
+name: Build and Release AppForge
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-gui:
+    name: Build AppForge GUI
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: gui
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install GUI dependencies
+        run: npm install
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: gui
+          tagName: ${{ github.ref_name }}
+          releaseName: 'AppForge ${{ github.ref_name }}'
+          releaseBody: |
+            ## AppForge ${{ github.ref_name }}
+
+            Native App Maker — Turn any website into a desktop app with a visual interface.
+
+            ### What's New
+            - Visual drag-and-drop app builder GUI
+            - Batch generation — queue multiple URLs
+            - Profile system — save and reload configurations
+            - Custom CSS/JS injection editor
+            - CLI enhancements: --batch, --save-profile, --load-profile
+
+            ### Installation
+            Download the `.exe` installer below and run it.
+          releaseDraft: true
+          prerelease: false
+
+  publish-cli:
+    name: Publish CLI to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build CLI
+        run: pnpm run cli:build
+
+      - name: Publish to npm
+        run: pnpm publish --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

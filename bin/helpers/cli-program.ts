@@ -252,6 +252,18 @@ ${green('|_|   \\__,_|_|\\_\\___|  can turn any webpage into a desktop app with 
         .hideHelp(),
     )
     .option(
+      '--batch <file>',
+      'Build multiple apps from a JSON config file',
+    )
+    .option(
+      '--save-profile <name>',
+      'Save current options as a reusable profile',
+    )
+    .option(
+      '--load-profile <name>',
+      'Load options from a saved profile',
+    )
+    .option(
       '--install',
       'Auto-install app to /Applications (macOS) after build and remove local bundle',
       DEFAULT.install,
